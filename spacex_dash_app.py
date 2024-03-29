@@ -38,46 +38,64 @@ app.layout = html.Div(children=[html.H1('SpaceX Launch Records Dashboard',
                                 # TASK 2: Add a pie chart to show the total successful launches count for all sites
                                 # If a specific launch site was selected, show the Success vs. Failed counts for the site
                                 # Function decorator to specify function input and output 
-@app.callback(Output(component_id='success-pie-chart', component_property='figure'),
-              Input(component_id='site-dropdown', component_property='value'))
-def get_pie_chart(entered_site):
-    filtered_df = spacex_df
-    if entered_site == 'ALL':
-        fig = px.pie(spacex_df, values='class', 
-        names='Launch Site', 
-        title='Total success launches')
-        return fig
-    else:
-        launch_site_data = spacex_df[spacex_df['Launch Site']]
-        fig2 = px.pie(launch_site_data, values='class', 
-        names='Launch Site', 
-        title='Total success launches per site')
-        return fig2             
-                                html.Div(dcc.Graph(id='success-pie-chart')),
-                                html.Br(),
+                                @app.callback(Output(component_id='success-pie-chart', component_property='figure'),
+                                              Input(component_id='site-dropdown', component_property='value'))
+                      def get_pie_chart(entered_site):
+                        launch_site_df = spacex.groupby('class')['Launch site'].sum().reset_index()
+                        if entered_site == 'ALL':
+                          pie_all_fig = px.pie(launch_site_df, values='class', 
+                                       names='class', 
+                                       title='Total success launches')
+                          return pie_all_fig
+                        else:
+                          pie_launch_fig = px.pie(launch_site_df, values='class',
+                                                  names='Launch Site',
+                                                  title='Total success launches per launch site')
+                          return pie_launch_fig
+                          
+                          html.Div(dcc.Graph(id='success-pie-chart')),
+                          html.Br(),
+                          html.P("Payload range (Kg):"),
+                          # TASK 3: Add a slider to select payload range
+                          dcc.RangeSlider(id='payload-slider',
+                                          min=0, 
+                                          max=10000, 
+                                          step=1000,
+                                          marks={0: '0',
+                                                 100: '100'},
+                                          value=[min_payload, max_payload])
 
-                                html.P("Payload range (Kg):"),
-                                # TASK 3: Add a slider to select payload range
-                                dcc.RangeSlider(id='payload-slider',
-                                min=0, 
-                                max=10000, 
-                                step=1000,
-                                marks={0: '0',
-                                100: '100'},
-                                value=[min_value, max_value])
-
-                                # TASK 4: Add a scatter chart to show the correlation between payload and launch success
+                          # TASK 4: Add a scatter chart to show the correlation between payload and launch success
                                 html.Div(dcc.Graph(id='success-payload-scatter-chart')),
                                 ])
-
-# TASK 2:
-# Add a callback function for `site-dropdown` as input, `success-pie-chart` as output
-@app.callback(
-    Output(component_id='success-payload-scatter-chart', component_property='figure')
-    [Input(component_id='site-dropdown', component_property='value'), 
-    Input(component_id="payload-slider", component_property="value")]
-# TASK 4:
-# Add a callback function for `site-dropdown` and `payload-slider` as inputs, `success-payload-scatter-chart` as output
+                          # TASK 2:
+                          # Add a callback function for `site-dropdown` as input, `success-pie-chart` as output
+                          @app.callback(
+                            Output(component_id='success-pie-chart', component_property='figure'),
+                            Input(component_id='site-dropdown', component_property='value'))
+                           def get_scatter_chart(entered_site):
+                             payload_df = spacex.groupby('Booster Version','Payload Mass (kg)')['class'].mean().reset_index()
+                             if entered_site == 'ALL':
+                               scatter_fig = px.scatter(payload_df, 
+                                                x="Payload Mass (kg)", 
+                                                y="class", 
+                                                color="Booster Version")
+                               return scatter_fig
+                             else:
+                               payload_df2 = spacex.groupby('Booster Version','Launch site','Payload Mass (kg)')['class'].mean().reset_index()
+                               scatter_fig2 = px.scatter(payload_df2, 
+                                                x="Payload Mass (kg)", 
+                                                y="class", 
+                                                color="Booster Version",
+                                                hover_data="Launch Site")
+                               return scatter_fig2
+                          # TASK 4:
+                          # Add a callback function for `site-dropdown` and `payload-slider` as inputs, `success-payload-scatter-chart` as output
+                          @app.callback(
+                            Output(component_id='success-payload-scatter-chart', component_property='figure')
+                            [Input(component_id='site-dropdown', component_property='value'), 
+                            Input(component_id='payload-slider', component_property='value')]
+ 
 
 
 # Run the app
