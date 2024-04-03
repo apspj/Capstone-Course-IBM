@@ -41,13 +41,13 @@ app.layout = html.Div(children=[html.H1('SpaceX Launch Records Dashboard',
                                 @app.callback(Output(component_id='success-pie-chart', component_property='figure'),
                                               Input(component_id='site-dropdown', component_property='value'))
                       def get_pie_chart(entered_site):
-                        launch_site_df = spacex.groupby('class')['Launch site'].sum().reset_index()
                         if entered_site == 'ALL':
-                          pie_all_fig = px.pie(launch_site_df, values='class', 
+                          pie_all_fig = px.pie(spacex_df, values='class', 
                                        names='class', 
                                        title='Total success launches')
                           return pie_all_fig
                         else:
+                          launch_site_df = spacex_df.groupby('class')['Launch site'].sum().reset_index()
                           pie_launch_fig = px.pie(launch_site_df, values='class',
                                                   names='Launch Site',
                                                   title='Total success launches per launch site')
@@ -74,7 +74,7 @@ app.layout = html.Div(children=[html.H1('SpaceX Launch Records Dashboard',
                             Output(component_id='success-pie-chart', component_property='figure'),
                             Input(component_id='site-dropdown', component_property='value'))
                            def get_scatter_chart(entered_site):
-                             payload_df = spacex.groupby('Booster Version','Payload Mass (kg)')['class'].mean().reset_index()
+                             payload_df = spacex_df.groupby('Booster Version','Payload Mass (kg)')['class'].mean().reset_index()
                              if entered_site == 'ALL':
                                scatter_fig = px.scatter(payload_df, 
                                                 x="Payload Mass (kg)", 
@@ -82,7 +82,7 @@ app.layout = html.Div(children=[html.H1('SpaceX Launch Records Dashboard',
                                                 color="Booster Version")
                                return scatter_fig
                              else:
-                               payload_df2 = spacex.groupby('Booster Version','Launch site','Payload Mass (kg)')['class'].mean().reset_index()
+                               payload_df2 = spacex_df.groupby('Booster Version','Launch site','Payload Mass (kg)')['class'].mean().reset_index()
                                scatter_fig2 = px.scatter(payload_df2, 
                                                 x="Payload Mass (kg)", 
                                                 y="class", 
